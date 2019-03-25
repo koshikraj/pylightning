@@ -1,9 +1,13 @@
 import json
 import falcon
 
-from lightning_libs.grpc import create_stub, ln
+import codecs
+import os
+
+from lightning_libs.grpc import gRPCDriver, ln
 
 
+grpc_driver = gRPCDriver()
 
 class VerifyMessage:
 
@@ -11,8 +15,8 @@ class VerifyMessage:
 
         try:
 
-            stub = create_stub()
-            verifymessage_resp = stub.VerifyMessage(ln.VerifyMessageRequest(msg=b"1234", signature="ryqpeqhocrcoqks7inasb8it79ri8idtm5a99x95irg7gjndnc7fwxdd87afof16ep4aqa51qqptw38967jpgfq91e15eutmbaugazyt"))
+
+            verifymessage_resp = grpc_driver.stub.VerifyMessage(ln.VerifyMessageRequest(msg=b"1234", signature="rdmz61jkcbr5itef3rojay38ssfu8a8zxsp6fis7xfsi3g6jt9nf1ik6xxbopgezeppuo5rbgabprzs78kw6yrpxot55qyrnc95qtz86"))
 
             res.status = falcon.HTTP_200
             res.body = json.dumps({'status': True,
@@ -33,14 +37,33 @@ class GenerateInvoice:
 
         try:
 
-            stub = create_stub()
-
-            add_invoice_resp = stub.AddInvoice(ln.Invoice(value=1000, memo="Test Memo"))
+            add_invoice_resp = grpc_driver.generate_invoice(amt=10000, memo="Test Memo")
             payment_request = add_invoice_resp.payment_request
 
             res.status = falcon.HTTP_200
             res.body = json.dumps({'status': True,
                                    'data': {'invoice': payment_request},
+                                   'message': 'success'
+                                   })
+        except Exception as e:
+            res.status = falcon.HTTP_400
+            res.body = json.dumps({'status': False,
+                                   'data': [],
+                                   'message': str(e)
+                                   })
+
+class SendPayment:
+
+    def on_get(self, req, res):
+
+        try:
+            payment_request=req.params['pay_req']
+            send_payment_resp = grpc_driver.send_payment(pay_req=payment_request)
+
+
+            res.status = falcon.HTTP_200
+            res.body = json.dumps({'status': send_payment_resp,
+                                   'data': [],
                                    'message': 'success'
                                    })
         except Exception as e:

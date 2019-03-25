@@ -24,6 +24,7 @@ class HandleCORS(object):
 apps = falcon.API(middleware=[HandleCORS()])
 apps.add_route("/verify/", VerifyMessage())
 apps.add_route("/generate/", GenerateInvoice())
+apps.add_route("/send/", SendPayment())
 
 
 
